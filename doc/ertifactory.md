@@ -51,7 +51,7 @@ Availables options :
 * `{path, "my/path/to/artifact"}` : Path and name of the artifact in the repository;
 if omitted, the last path component of "Package" will be used
 
-* Other option tuples are set into the url string as a sequence of propety-settings, separated by a semi-colon.
+* Other option tuples are set into the url string as a sequence of property-settings, separated by a semi-colon.
 
 
 <a name="get_deployed_artifact-4"></a>
