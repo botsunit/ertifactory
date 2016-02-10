@@ -29,16 +29,14 @@ deploy(BaseUrl::<a href="httpc.md#type-url">httpc:url()</a>, Repository::string(
 
 Stores an artifact into a given repository.
 
-<li>`BaseUrl` : URL string of an artifactory server</li>
+* `BaseUrl` : URL string of an artifactory server
 
+* `Repository` : Repository name of your repo in the artifactory server
 
-<li>`Repository` : Repository name of your repo in the artifactory server </li>
+* `Package` : Local path to the artifact file to deploy
 
+* `Options` A list of {Key,Value} options. Keys may be atoms or strings. Values should be given as strings. See below.
 
-<li>`Package` : Local path to the artifact file to deploy</li>
-
-
-<li>`Options` A list of {Key,Value} options. Keys may be atoms or strings. Values should be given as strings. See below.</li>
 
 Availables options :
 

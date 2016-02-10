@@ -15,10 +15,13 @@ get_deployed_artifact(_BaseUrl, _Repository, _Package, _Options) ->
 
 % @doc
 % Stores an artifact into a given repository.
+% <ul>
 % <li><tt>BaseUrl</tt> : URL string of an artifactory server</li>
 % <li><tt>Repository</tt> : Repository name of your repo in the artifactory server </li>
 % <li><tt>Package</tt> : Local path to the artifact file to deploy</li>
 % <li><tt>Options</tt> A list of {Key,Value} options. Keys may be atoms or strings. Values should be given as strings. See below.</li>
+% </ul>
+%
 % Availables options :
 % <ul>
 % <li><tt>{username, "my_user_name"} </tt> : username of an artifactory account (Basic Auth.)</li>
@@ -69,17 +72,18 @@ deploy(BaseUrl, Repository, Package, Options) ->
   end.
 
 other_options_to_string(Options) ->
-  lists:flatten(lists:filtermap(
-  fun({K, V}) ->
-    KStr = bucs:to_string(K),
-    case lists:member(KStr,?ERTIFACTORY_OPTIONS) of
-      false -> 
-        {true, io_lib:format(";~s=~s", [KStr,V])};
-      true -> 
-        false
-    end
-  end,
-  Options)).
+  lists:flatten(
+    lists:filtermap(
+      fun({K, V}) ->
+          KStr = bucs:to_string(K),
+          case lists:member(KStr, ?ERTIFACTORY_OPTIONS) of
+            false -> 
+              {true, io_lib:format(";~s=~s", [KStr,V])};
+            true -> 
+              false
+          end
+      end,
+      Options)).
 
 ensure_net_started() ->
   case application:ensure_all_started(inets) of
