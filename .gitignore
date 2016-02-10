@@ -1,0 +1,17 @@
+build
+priv
+ebin
+erl_crash.dump
+log.txt
+.erlang.mk
+deps
+*.d
+test/*.beam
+.DS_Store
+log
+queues
+_jorel
+test/TEST-*.xml
+test_files/tmp_test
+.jorel/
+/.tests

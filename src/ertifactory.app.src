@@ -1,0 +1,7 @@
+{application,ertifactory,
+             [{description,["A very simple wrapper to Artifactory repository"]},
+              {vsn,"0.0.1"},
+              {registered,[]},
+              {modules,[]},
+              {applications,[kernel,stdlib,bucs]},
+              {env,[]}]}.
