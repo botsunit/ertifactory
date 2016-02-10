@@ -3,12 +3,6 @@
 -include_lib("eunit/include/eunit.hrl").
 
 % @doc
-% Stores an artifact into a given repository.
-% @end
--spec deploy(BaseUrl :: string(), Repository :: string(), Package :: string(), Options :: term() ) ->
-  {ok, Url::string()} | {error, Reason::term()}.
-
-% @doc
 % Gets a given artifact from an Artifactory repository.
 % Returns the local path where the downloaded release has been stored
 % @end
@@ -17,19 +11,11 @@
 get_deployed_artifact(_BaseUrl, _Repository, _Package, _Options) ->
   ok.
 
-ensure_net_started() ->
-  case application:ensure_all_started(inets) of
-    {ok, _} -> 
-      case application:ensure_all_started(ssl) of
-        {ok, _} -> 
-          ok;
-        Err -> 
-          Err
-      end;
-    Err -> 
-      Err
-  end.
-
+% @doc
+% Stores an artifact into a given repository.
+% @end
+-spec deploy(BaseUrl :: string(), Repository :: string(), Package :: string(), Options :: term() ) ->
+  {ok, Url::string()} | {error, Reason::term()}.
 deploy(BaseUrl, Repository, Package, Options) ->
   case ensure_net_started() of 
     ok ->
@@ -60,7 +46,7 @@ deploy(BaseUrl, Repository, Package, Options) ->
           case httpc:request(put, {URL, Header, "application/x-gzip", Body}, [{ssl, [{verify, 0}]}], []) of
             {ok, {{_, 201, _}, _, _}} -> 
               ok;
-            {ok, {{Truc, Code, Message}, _, _}} -> 
+            {ok, {{_, Code, Message}, _, _}} -> 
                {error, {Code, Message}};
             OtherReturn ->  
               OtherReturn
@@ -71,3 +57,17 @@ deploy(BaseUrl, Repository, Package, Options) ->
     Err ->
       Err
 end.
+
+ensure_net_started() ->
+  case application:ensure_all_started(inets) of
+    {ok, _} -> 
+      case application:ensure_all_started(ssl) of
+        {ok, _} -> 
+          ok;
+        Err -> 
+          Err
+      end;
+    Err -> 
+      Err
+  end.
+
