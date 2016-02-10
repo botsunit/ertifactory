@@ -9,7 +9,7 @@
 ## Function Index ##
 
 
-<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#deploy-4">deploy/4</a></td><td>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#deploy-4">deploy/4</a></td><td> 
 Stores an artifact into a given repository.</td></tr><tr><td valign="top"><a href="#get_deployed_artifact-4">get_deployed_artifact/4</a></td><td>
 Gets a given artifact from an Artifactory repository.</td></tr></table>
 
@@ -27,7 +27,19 @@ deploy(BaseUrl::string(), Repository::string(), Package::string(), Options::term
 </code></pre>
 <br />
 
+
 Stores an artifact into a given repository.
+
+Availables options :
+
+* `username`
+
+* `password`
+
+* `api_key`
+
+* `path`
+
 
 <a name="get_deployed_artifact-4"></a>
 

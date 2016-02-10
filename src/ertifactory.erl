@@ -13,6 +13,14 @@ get_deployed_artifact(_BaseUrl, _Repository, _Package, _Options) ->
 
 % @doc
 % Stores an artifact into a given repository.
+%
+% Availables options :
+% <ul>
+% <li><tt>username</tt></li>
+% <li><tt>password</tt></li>
+% <li><tt>api_key</tt></li>
+% <li><tt>path</tt></li>
+% </ul>
 % @end
 -spec deploy(BaseUrl :: string(), Repository :: string(), Package :: string(), Options :: term() ) ->
   {ok, Url::string()} | {error, Reason::term()}.
