@@ -23,7 +23,7 @@ Gets a given artifact from an Artifactory repository.</td></tr></table>
 ### deploy/4 ###
 
 <pre><code>
-deploy(BaseUrl::string(), Repository::string(), Package::string(), Options::term()) -&gt; {ok, Url::string()} | {error, Reason::term()}
+deploy(BaseUrl::<a href="httpc.md#type-url">httpc:url()</a>, Repository::string(), Package::string(), Options::term()) -&gt; {ok, Url::string()} | {error, Reason::term()}
 </code></pre>
 <br />
 
@@ -46,7 +46,7 @@ Availables options :
 ### get_deployed_artifact/4 ###
 
 <pre><code>
-get_deployed_artifact(BaseUrl::string(), Repository::string(), Package::string(), Options::term()) -&gt; {ok, FilePath::string()} | {error, Reason::term()}
+get_deployed_artifact(BaseUrl::<a href="httpc.md#type-url">httpc:url()</a>, Repository::string(), Package::string(), Options::term()) -&gt; {ok, FilePath::string()} | {error, Reason::term()}
 </code></pre>
 <br />
 
