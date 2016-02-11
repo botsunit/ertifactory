@@ -43,7 +43,7 @@ deploy(BaseUrl, Repository, Package, Options) ->
       OptPath = buclists:keyufind(path, 1, Options, ""),
       ApiKeyHeader = if 
                        ApiKey =:= undefined -> [];
-                       true -> [{"X-Api-Key", ApiKey}]
+                       true -> [{"X-JFrog-Art-Api", ApiKey}]
                      end, 
       BasicAuthHeader = if 
                           Username =:= undefined orelse Password =:= undefined -> 
