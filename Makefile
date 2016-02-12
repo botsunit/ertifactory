@@ -1,10 +1,11 @@
 PROJECT = ertifactory
 
-DOC_DEPS = edown
-DEPS = bucs
-
-dep_edown = git https://github.com/botsunit/edown.git master
+DEPS = bucs jsx
 dep_bucs = git https://github.com/botsunit/bucs.git master
+dep_jsx = git https://github.com/talentdeficit/jsx.git master
+
+DOC_DEPS = edown
+dep_edown = git https://github.com/botsunit/edown.git master
 
 include erlang.mk
 

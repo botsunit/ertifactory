@@ -10,7 +10,7 @@
 
 
 <table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#deploy-4">deploy/4</a></td><td>
-Stores an artifact into a given repository.</td></tr><tr><td valign="top"><a href="#get_deployed_artifact-4">get_deployed_artifact/4</a></td><td>
+Stores an artifact into a given repository.</td></tr><tr><td valign="top"><a href="#search_by_properties-2">search_by_properties/2</a></td><td>
 Gets a given artifact from an Artifactory repository.</td></tr></table>
 
 
@@ -52,15 +52,15 @@ if omitted, the last path component of "Package" will be used
 * Other option tuples are set into the url string as a sequence of property-settings, separated by a semi-colon.
 
 
-<a name="get_deployed_artifact-4"></a>
+<a name="search_by_properties-2"></a>
 
-### get_deployed_artifact/4 ###
+### search_by_properties/2 ###
 
 <pre><code>
-get_deployed_artifact(BaseUrl::<a href="httpc.md#type-url">httpc:url()</a>, Repository::string(), Package::string(), Options::term()) -&gt; {ok, FilePath::string()} | {error, Reason::term()}
+search_by_properties(BaseUrl::<a href="httpc.md#type-url">httpc:url()</a>, Options::term()) -&gt; {ok, [ArtifactURL::<a href="httpc.md#type-url">httpc:url()</a>]} | {error, Reason::term()}
 </code></pre>
 <br />
 
 Gets a given artifact from an Artifactory repository.
-Returns the local path where the downloaded release has been stored
+Returns the file info
 

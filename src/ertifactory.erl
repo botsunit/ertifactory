@@ -1,17 +1,44 @@
 -module(ertifactory).
--export([deploy/4, get_deployed_artifact/4]).
+-export([deploy/4, 
+         search_by_properties/2]).
 -include_lib("eunit/include/eunit.hrl").
 
 -define(ERTIFACTORY_OPTIONS,["username", "password", "api_key", "path"]).
+-define(SEARCH_BY_PROPERTIES_PATH, "/api/search/prop").
 
 % @doc
 % Gets a given artifact from an Artifactory repository.
-% Returns the local path where the downloaded release has been stored
+% Returns the file info
 % @end
--spec get_deployed_artifact(BaseUrl :: httpc:url(), Repository :: string(), Package :: string(), Options :: term()) ->
-  {ok, FilePath::string()} | {error, Reason::term()}.
-get_deployed_artifact(_BaseUrl, _Repository, _Package, _Options) ->
-  ok.
+-spec search_by_properties(BaseUrl :: httpc:url(), Options :: term()) ->
+  {ok, [ArtifactURL :: httpc:url()]} | {error, Reason::term()}.
+search_by_properties(BaseUrl, Options) ->
+  case auth_headers(Options) of
+    {ok, Headers} ->
+      URL = build_url([BaseUrl, ?SEARCH_BY_PROPERTIES_PATH], Options),
+      case httpc:request(get, 
+                         {URL, Headers}, 
+                         [{ssl, [{verify, 0}]}], []) of
+        {ok, {{_, 200, _}, _, Body}} -> 
+          case jsx:is_json(bucs:to_binary(Body)) of
+            true ->
+              case jsx:decode(bucs:to_binary(Body), [return_maps, {labels, atom}]) of
+                #{results := Results} ->
+                  {ok, [file_info(finalize_url(X, BaseUrl), Options) || #{uri := X} <- Results]};
+                _ ->
+                  {error, invalid_response}
+              end;
+            false ->
+              {error, invalid_response1, Body}
+          end;
+        {ok, {{_, Code, Message}, _, _}} -> 
+          {error, {Code, Message}};
+        OtherReturn ->  
+          OtherReturn
+      end;
+    Error ->
+      Error
+  end.
 
 % @doc
 % Stores an artifact into a given repository.
@@ -35,28 +62,20 @@ get_deployed_artifact(_BaseUrl, _Repository, _Package, _Options) ->
 -spec deploy(BaseUrl :: httpc:url(), Repository :: string(), Package :: string(), Options :: term() ) ->
   {ok, Url::string()} | {error, Reason::term()}.
 deploy(BaseUrl, Repository, Package, Options) ->
-  case ensure_net_started() of 
-    ok ->
-      Username = buclists:keyufind(username, 1, Options, undefined) ,
-      Password = buclists:keyufind(password, 1, Options, undefined) ,
-      ApiKey = buclists:keyufind(api_key, 1, Options, undefined),
+  case auth_headers(Options) of
+    {ok, Headers} ->
       OptPath = buclists:keyufind(path, 1, Options, ""),
-      ApiKeyHeader = if 
-                       ApiKey =:= undefined -> [];
-                       true -> [{"X-JFrog-Art-Api", ApiKey}]
-                     end, 
-      BasicAuthHeader = if 
-                          Username =:= undefined orelse Password =:= undefined -> 
-                            [];
-                          true -> 
-                            [{"Authorization", lists:flatten("Basic " ++ base64:encode_to_string(Username ++ ":" ++ Password))}]
-                        end,
-      Header = lists:flatten([ApiKeyHeader|BasicAuthHeader]),
       PackageName = filename:basename(Package),
-      URL = string:join(buclists:delete_if(fun(E) -> E =:= "" end, [BaseUrl, Repository, OptPath, PackageName]), "/") ++ other_options_to_string(Options),
+      URL = build_url([BaseUrl, Repository, OptPath, PackageName], 
+                      Options, 
+                      [{param_separator, ";"},
+                       {param_delimiter, ";"},
+                       {exclude, ?ERTIFACTORY_OPTIONS}]),
       case file:read_file(Package) of
         {ok, Body} ->
-          case httpc:request(put, {URL, Header, bucs:to_string(bucmime:type(Package)), Body}, [{ssl, [{verify, 0}]}], []) of
+          case httpc:request(put, 
+                             {URL, Headers, bucs:to_string(bucmime:type(Package)), Body}, 
+                             [{ssl, [{verify, 0}]}], []) of
             {ok, {{_, 201, _}, _, _}} -> 
               ok;
             {ok, {{_, Code, Message}, _, _}} -> 
@@ -71,19 +90,27 @@ deploy(BaseUrl, Repository, Package, Options) ->
       Err
   end.
 
-other_options_to_string(Options) ->
-  lists:flatten(
-    lists:filtermap(
-      fun({K, V}) ->
-          KStr = bucs:to_string(K),
-          case lists:member(KStr, ?ERTIFACTORY_OPTIONS) of
-            false -> 
-              {true, io_lib:format(";~s=~s", [KStr,V])};
-            true -> 
-              false
-          end
-      end,
-      Options)).
+auth_headers(Options) ->
+  case ensure_net_started() of 
+    ok ->
+      Username = buclists:keyufind(username, 1, Options, undefined) ,
+      Password = buclists:keyufind(password, 1, Options, undefined) ,
+      ApiKey = buclists:keyufind(api_key, 1, Options, undefined),
+      {ok, if 
+             ApiKey =:= undefined -> [];
+             true -> [{"X-JFrog-Art-Api", ApiKey}]
+           end ++ 
+           if 
+             Username =:= undefined orelse Password =:= undefined -> 
+               [];
+             true -> 
+               [{"Authorization", 
+                 lists:flatten("Basic " ++ 
+                               base64:encode_to_string(
+                                 string:join([Username, Password], ":")))}]
+           end};
+    Error -> Error
+  end.
 
 ensure_net_started() ->
   case application:ensure_all_started(inets) of
@@ -96,5 +123,65 @@ ensure_net_started() ->
       end;
     Err -> 
       Err
+  end.
+
+build_url(URLParts, Params) ->
+  build_url(URLParts, Params, []).
+build_url([Base|Rest], Params, Options) ->
+  Exclude = buclists:keyufind(exclude, 1, Options, ?ERTIFACTORY_OPTIONS),
+  lists:flatten(
+    string:join(
+      [prepare_url(Base, right)|[prepare_url(Part, both) || Part <- Rest]],
+      "/") ++ 
+    buclists:keyufind(param_separator, 1, Options, "?") ++ 
+    string:join(
+      lists:filtermap(fun({K, V}) ->
+                          K1 = bucs:to_string(K),
+                          case lists:member(K1, Exclude) of
+                            false ->
+                              {true, string:join([K1, bucs:to_string(V)], "=")};
+                            true ->
+                              false
+                          end
+                      end, Params),
+      buclists:keyufind(param_separator, 1, Options, "&"))).
+
+prepare_url(URL, Direction) ->
+  string:strip(URL, Direction, $/).
+
+finalize_url(URL, Base) when is_list(URL), is_list(Base) ->
+  case URL of
+    [$:|_] -> 
+      case http_uri:parse(Base, [{scheme_defaults, http_uri:scheme_defaults()}, 
+                            {fragment, true}]) of
+        {ok, {Scheme, _, _, _, _, _, _}} -> bucs:to_string(Scheme) ++ URL;
+        _ -> URL
+      end;
+    _ -> URL
+  end;
+finalize_url(URL, Base) ->
+  finalize_url(bucs:to_string(URL), bucs:to_string(Base)).
+
+file_info(FileURL, Options) ->
+  case auth_headers(Options) of
+    {ok, Headers} ->
+      URL = build_url([FileURL], Options),
+      case httpc:request(get,
+                         {URL, Headers},
+                         [{ssl, [{verify, 0}]}], []) of
+        {ok, {{_, 200, _}, _, Body}} -> 
+          case jsx:is_json(bucs:to_binary(Body)) of
+            true ->
+              jsx:decode(bucs:to_binary(Body), [return_maps, {labels, atom}]);
+            false ->
+              {error, invalid_response}
+          end;
+        {ok, {{_, Code, Message}, _, _}} -> 
+          {error, {Code, Message}};
+        OtherReturn ->  
+          OtherReturn
+      end;
+    Error ->
+      Error
   end.
 
