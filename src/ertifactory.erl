@@ -9,9 +9,22 @@
 % @doc
 % Gets a given artifact from an Artifactory repository.
 % Returns the file info
+%
+% <ul>
+% <li><tt>BaseUrl</tt> : URL string of an artifactory server</li>
+% <li><tt>Options</tt> A list of {Key,Value} options. Keys may be atoms or strings. Values should be given as strings. See below.</li>
+% </ul>
+%
+% Availables options :
+% <ul>
+% <li><tt>{username, "my_user_name"} </tt> : username of an artifactory account (Basic Auth.)</li>
+% <li><tt>{password, "my_password"} </tt> : associated password</li>
+% <li><tt>{api_key, "my_api_key} </tt> : Alternatively, the api_key used to connect the account.</li>
+% <li>Other option tuples use to search.</li>
+% </ul>
 % @end
 -spec search_by_properties(BaseUrl :: httpc:url(), Options :: term()) ->
-  {ok, [ArtifactURL :: httpc:url()]} | {error, Reason::term()}.
+  {ok, [ArtifactInfos :: map()]} | {error, Reason::term()}.
 search_by_properties(BaseUrl, Options) ->
   case auth_headers(Options) of
     {ok, Headers} ->
