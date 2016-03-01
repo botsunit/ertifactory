@@ -118,7 +118,7 @@ deploy(BaseUrl, Repository, Package, Options) ->
 % <li><tt>{username, "my_user_name"} </tt> : username of an artifactory account (Basic Auth.)</li>
 % <li><tt>{password, "my_password"} </tt> : associated password</li>
 % <li><tt>{api_key, "my_api_key} </tt> : Alternatively, the api_key used to connect the account.</li>
-% <li><tt>{path, "my/path/to/artifact:1.0.0"}</tt> : Path and name of the artifact in the repository; 
+% <li><tt>{path, "my/path/to/artifact:1.0.0"}</tt> : Path and name of the artifact in the repository;</li>
 % <li>Other option tuples use to set properties of the artifact.</li>
 % </ul>
 % @end
