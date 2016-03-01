@@ -1,6 +1,7 @@
 -module(ertifactory).
 -export([deploy/4, 
-         search_by_properties/2]).
+         search_by_properties/2,
+         set_artifact_properties/3]).
 -include_lib("eunit/include/eunit.hrl").
 
 -define(ERTIFACTORY_OPTIONS,["username", "password", "api_key", "path"]).
@@ -103,6 +104,47 @@ deploy(BaseUrl, Repository, Package, Options) ->
       Err
   end.
 
+% @doc
+% Sets properties for a given artifact in an Artifactory repository.
+% Returns ok or {error, Reason}.
+%
+% <ul>
+% <li><tt>BaseUrl</tt> : URL string of an artifactory server</li>
+% <li><tt>Options</tt> : A list of {Key,Value} options. Keys may be atoms or strings. Values should be given as strings. See below.</li>
+% </ul>
+%
+% Availables options :
+% <ul>
+% <li><tt>{username, "my_user_name"} </tt> : username of an artifactory account (Basic Auth.)</li>
+% <li><tt>{password, "my_password"} </tt> : associated password</li>
+% <li><tt>{api_key, "my_api_key} </tt> : Alternatively, the api_key used to connect the account.</li>
+% <li><tt>{path, "my/path/to/artifact:1.0.0"}</tt> : Path and name of the artifact in the repository; 
+% <li>Other option tuples use to set properties of the artifact.</li>
+% </ul>
+% @end
+-spec set_artifact_properties(BaseUrl :: httpc:url(), Repository :: string(), Options :: term()) ->
+    ok | {error, Reason::term()}.
+set_artifact_properties(BaseUrl, Repository, Options) ->
+  case auth_headers(Options) of
+    {ok, Headers} ->
+      OptPath = buclists:keyufind(path, 1, Options, ""),
+      URL = build_url([BaseUrl, "api", "storage", Repository, OptPath], 
+                      Options, 
+                      [{param_separator, "?properties="},
+                       {param_delimiter, "|"},
+                       {exclude, ?ERTIFACTORY_OPTIONS}]),
+      case httpc:request(put, {URL, Headers, "application/x-www-form-urlencoded",""},[{ssl, [{verify, 0}]}], []) of
+        {ok, _ } -> 
+          ok;
+        OtherReturn ->  
+          OtherReturn
+      end;
+    Err ->
+      Err
+  end.
+
+
+
 auth_headers(Options) ->
   case ensure_net_started() of 
     ok ->
@@ -157,7 +199,7 @@ build_url([Base|Rest], Params, Options) ->
                               false
                           end
                       end, Params),
-      buclists:keyufind(param_separator, 1, Options, "&"))).
+      buclists:keyufind(param_delimiter, 1, Options, "&"))).
 
 prepare_url(URL, Direction) ->
   string:strip(URL, Direction, $/).
